@@ -8,7 +8,6 @@ ReconX is an automated reconnaissance toolkit for authorized penetration testing
 
 <p align="left">
   <img src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54" alt="Python" />
-  <img src="https://img.shields.io/badge/Nmap-000000?style=for-the-badge&logo=nmap&logoColor=white" alt="Nmap" />
   <img src="https://img.shields.io/badge/Ollama-black?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama" />
   <img src="https://img.shields.io/badge/Shodan-E34F26?style=for-the-badge&logo=shodan&logoColor=white" alt="Shodan" />
   <img src="https://img.shields.io/badge/GitHub%20API-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
@@ -16,9 +15,6 @@ ReconX is an automated reconnaissance toolkit for authorized penetration testing
   <img src="https://img.shields.io/badge/HTML5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5" />
   <br>
   <img src="https://img.shields.io/badge/Wappalyzer-4608AD?style=for-the-badge&logo=wappalyzer&logoColor=white" alt="Wappalyzer" />
-  <img src="https://img.shields.io/badge/BeautifulSoup-gray?style=for-the-badge" alt="BeautifulSoup" />
-  <img src="https://img.shields.io/badge/FFUF-000000?style=for-the-badge" alt="FFUF" />
-  <img src="https://img.shields.io/badge/SecLists-blue?style=for-the-badge" alt="SecLists" />
   <img src="https://img.shields.io/badge/Wayback%20Machine-gray?style=for-the-badge" alt="Wayback Machine" />
   <img src="https://img.shields.io/badge/NVD%20CVE-red?style=for-the-badge" alt="NVD CVE" />
 </p>
