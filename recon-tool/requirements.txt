@@ -1,0 +1,12 @@
+beautifulsoup4
+builtwith
+colorama
+dnspython
+googlesearch-python
+jinja2
+PyGithub
+python-nmap
+python-Wappalyzer
+python-whois
+requests
+shodan

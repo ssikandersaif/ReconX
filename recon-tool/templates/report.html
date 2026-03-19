@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReconX Report – {{ target }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --accent: #2563eb;
+    
+    /* Severities */
+    --critical: #dc2626;
+    --high: #ea580c;
+    --medium: #ca8a04;
+    --low: #16a34a;
+    --info: #0284c7;
+
+    /* Panels */
+    --glass-bg: #ffffff;
+    --glass-border: #e2e8f0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--bg-color);
+    color: var(--text-primary); 
+    line-height: 1.7;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Clean Background elements for Light Theme */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -10%; left: -10%; width: 50%; height: 50%;
+    background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, rgba(255,255,255,0) 70%);
+    z-index: -1; pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -10%; right: -10%; width: 60%; height: 60%;
+    background: radial-gradient(circle, rgba(220,38,38,0.03) 0%, rgba(255,255,255,0) 70%);
+    z-index: -1; pointer-events: none;
+  }
+
+  .glass-panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+  /* Header Section */
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2rem 2.5rem; margin-bottom: 2rem;
+  }
+  .header-titles h1 { font-size: 2.2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+  .header-titles .meta { color: var(--text-secondary); font-size: 0.95rem; font-family: 'JetBrains Mono', monospace; }
+  
+  .score-container { text-align: center; }
+  .score-label { font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600; }
+  .score-ring { 
+    width: 100px; height: 100px; border-radius: 50%; 
+    background: conic-gradient(var(--accent) 0%, #f1f5f9 0); 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 1.8rem; font-weight: 700; position: relative; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  .score-ring::before { content: ''; position: absolute; width: 84px; height: 84px; border-radius: 50%; background: #ffffff; }
+  .score-ring span { position: relative; z-index: 1; color: var(--text-primary); }
+
+  /* Section Styles */
+  section { margin-bottom: 3rem; }
+  h2 { 
+    font-size: 1.4rem; font-weight: 700; color: #1e293b; margin-bottom: 1.5rem; 
+    display: flex; align-items: center; gap: 0.7rem; letter-spacing: -0.5px;
+  }
+  h2::before { content: ''; display: block; width: 6px; height: 24px; border-radius: 4px; background: var(--accent); }
+
+  /* Stats Grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
+  .stat-card { padding: 1.5rem; text-align: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+  .stat-card .count { font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 0.5rem; }
+  .stat-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; color: var(--text-secondary); }
+  
+  .stat-card.critical { border-bottom: 4px solid var(--critical); }
+  .stat-card.critical .count { color: var(--critical); }
+  .stat-card.high { border-bottom: 4px solid var(--high); }
+  .stat-card.high .count { color: var(--high); }
+  .stat-card.medium { border-bottom: 4px solid var(--medium); }
+  .stat-card.medium .count { color: var(--medium); }
+  .stat-card.low { border-bottom: 4px solid var(--low); }
+  .stat-card.low .count { color: var(--low); }
+  .stat-card.info { border-bottom: 4px solid var(--info); }
+  .stat-card.info .count { color: var(--info); }
+
+  /* Body text containers */
+  .text-box { padding: 2rem; font-size: 1.05rem; color: #334155; line-height: 1.8; }
+  .text-box p { margin-bottom: 1rem; }
+  .text-box p:last-child { margin-bottom: 0; }
+
+  /* Findings Accordions */
+  .finding { margin-bottom: 1.2rem; transition: all 0.3s ease; }
+  .finding-header { 
+    display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem 1.5rem; 
+    cursor: pointer; user-select: none;
+    background: #f8fafc; border-radius: 12px;
+    border: 1px solid transparent;
+    transition: background 0.2s ease;
+  }
+  .finding-header:hover { background: #f1f5f9; }
+  
+  .badge { padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-Critical { background: #fef2f2; color: var(--critical); border: 1px solid #fecaca; }
+  .badge-High { background: #fff7ed; color: var(--high); border: 1px solid #fed7aa; }
+  .badge-Medium { background: #fefce8; color: var(--medium); border: 1px solid #fef08a; }
+  .badge-Low { background: #f0fdf4; color: var(--low); border: 1px solid #bbf7d0; }
+  .badge-Info { background: #f0f9ff; color: var(--info); border: 1px solid #bae6fd; }
+
+  .finding-title { font-weight: 600; font-size: 1.1rem; flex: 1; color: #1e293b; }
+  .finding-body { padding: 0 1.5rem; max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; opacity: 0; }
+  .finding-body.open { padding: 1.5rem; max-height: 2000px; opacity: 1; border-top: 1px solid var(--glass-border); }
+  
+  .finding-body p { margin-bottom: 1.2rem; color: #475569; }
+  
+  /* Evidence / Code Blocks */
+  pre { 
+    background: #f1f5f9; border: 1px solid #e2e8f0; 
+    border-radius: 8px; padding: 1.2rem; overflow-x: auto; 
+    font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; 
+    color: #0f172a; margin-bottom: 1.5rem;
+  }
+  
+  .remediation { 
+    background: #eff6ff; border-left: 4px solid var(--accent); 
+    padding: 1.2rem; border-radius: 0 8px 8px 0; color: #334155; 
+  }
+  .remediation strong { color: var(--accent); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; display: block; margin-bottom: 0.4rem; }
+
+  /* Technical Details Tables */
+  h3 { font-size: 1.1rem; color: var(--text-primary); margin: 2rem 0 1rem; font-weight: 600; display:flex; align-items:center; gap: 0.5rem; }
+  h3::before { content: '>'; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+  th { background: #f8fafc; color: var(--text-secondary); text-align: left; padding: 1rem; font-weight: 600; font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 1rem; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 0.95rem; font-family: 'JetBrains Mono', monospace;}
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; color: #0f172a; }
+
+  /* Tech Badges Grid */
+  .tech-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem; }
+  .tech-badge {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    padding: 0.8rem 1.4rem;
+    border-radius: 8px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    transition: all 0.2s ease;
+    cursor: default;
+  }
+  .tech-badge:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+  }
+  .tech-name { font-weight: 600; font-size: 1.05rem; color: #0f172a; margin-bottom: 0.3rem; }
+  .tech-cat { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; font-weight: 700; background: #eff6ff; padding: 0.2rem 0.6rem; border-radius: 4px; letter-spacing: 0.5px; }
+  
+  /* Footer */
+  .footer { 
+    text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.85rem; 
+    margin-top: 3rem; border-top: 1px solid var(--glass-border);
+  }
+  .footer span { margin: 0 10px; }
+
+  .toggle-icon { transition: transform 0.3s ease; color: var(--text-secondary); }
+  .open-icon { transform: rotate(180deg); }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  {% set score_numeric = score if score is number else 0 %}
+  
+  <!-- UI Header -->
+  <header class="header glass-panel">
+    <div class="header-titles">
+      <h1>ReconX Security Assessment</h1>
+      <div class="meta">
+        <span style="color:#0f172a; font-weight: 600;">Target:</span> {{ target }} &nbsp;|&nbsp; 
+        <span style="color:#0f172a; font-weight: 600;">Date:</span> {{ timestamp }}
+      </div>
+    </div>
+    <div class="score-container">
+      <div class="score-label">Security Score</div>
+      <div class="score-ring" style="background: conic-gradient(var(--accent) {{ score_numeric }}%, #f1f5f9 0);"><span>{{ score }}</span></div>
+    </div>
+  </header>
+
+  <!-- Severity Stats -->
+  <div class="stats-grid">
+    <div class="stat-card glass-panel critical">
+      <div class="count">{{ counts.Critical }}</div>
+      <div class="label">Critical</div>
+    </div>
+    <div class="stat-card glass-panel high">
+      <div class="count">{{ counts.High }}</div>
+      <div class="label">High</div>
+    </div>
+    <div class="stat-card glass-panel medium">
+      <div class="count">{{ counts.Medium }}</div>
+      <div class="label">Medium</div>
+    </div>
+    <div class="stat-card glass-panel low">
+      <div class="count">{{ counts.Low }}</div>
+      <div class="label">Low</div>
+    </div>
+    <div class="stat-card glass-panel info">
+      <div class="count">{{ counts.Info }}</div>
+      <div class="label">Info</div>
+    </div>
+  </div>
+
+  <!-- Executive Summary -->
+  <section>
+    <h2>Executive Summary</h2>
+    <div class="text-box glass-panel">
+      {{ report.executive_summary | replace('\n', '<br>') | safe }}
+    </div>
+  </section>
+
+  <!-- Vulnerability Findings -->
+  {% if report.technologies %}
+  <section>
+    <h2>Detected Technologies</h2>
+    <div class="glass-panel" style="padding: 1.5rem;">
+      <div class="tech-grid" style="margin-bottom:0;">
+        {% for tech in report.technologies %}
+        <div class="tech-badge" title="Confidence: {{ tech.confidence | default('Unknown') }} | Method: {{ tech.detection_method | default('Unknown') }}">
+          <span class="tech-name">{{ tech.name }}</span>
+          <span class="tech-cat">{{ tech.category | default('Technology') }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Vulnerability Findings -->
+  <section>
+    <h2>Specific Findings</h2>
+    <div class="findings-container">
+      {% for finding in report.findings %}
+      <div class="finding glass-panel">
+        <div class="finding-header" onclick="toggle(this)">
+          <span class="badge badge-{{ finding.severity }}">{{ finding.severity }}</span>
+          <span class="finding-title">{{ finding.title }}</span>
+          <span class="toggle-icon">▼</span>
+        </div>
+        <div class="finding-body">
+          <p>{{ finding.description or finding.detail }}</p>
+          
+          {% if finding.evidence %}
+          <pre><code>{{ finding.evidence }}</code></pre>
+          {% endif %}
+          
+          <div class="remediation">
+            <strong>Remediation Strategy</strong>
+            {{ finding.remediation }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Technical RAW Data (Sectioned Beautifully) -->
+  <section>
+    <h2>Deep Technical Details</h2>
+    <div class="glass-panel" style="padding: 2rem;">
+      
+      {% if raw.dns_recon %}
+      <h3>DNS Reconnaissance</h3>
+      <pre><code>{{ raw.dns_recon.dns_records | tojson(indent=2) }}</code></pre>
+      
+      {% if raw.dns_recon.subdomains_crtsh %}
+      <h3>Discovered Subdomains (crt.sh)</h3>
+      <pre><code>{{ raw.dns_recon.subdomains_crtsh | join('\n') }}</code></pre>
+      {% endif %}
+      {% endif %}
+
+      {% if raw.osint %}
+      <h3>OSINT: Shodan + Wayback</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 0.8rem;">Shodan source: official Shodan API response captured during scan.</p>
+      {% if raw.osint.shodan %}
+      <pre><code>{{ raw.osint.shodan | tojson(indent=2) }}</code></pre>
+      {% else %}
+      <pre><code>{"message": "Shodan module returned no data."}</code></pre>
+      {% endif %}
+
+      <h3>Wayback URLs</h3>
+      {% if raw.osint.wayback_urls %}
+      <pre><code>{{ raw.osint.wayback_urls | join('\n') }}</code></pre>
+      {% else %}
+      <pre><code>{"message": "Wayback query returned 0 archived URLs for this target."}</code></pre>
+      {% endif %}
+      {% endif %}
+
+      {% if raw.github_recon %}
+      <h3>GitHub Recon Results</h3>
+      {% if raw.github_recon.error %}
+      <pre><code>{{ raw.github_recon | tojson(indent=2) }}</code></pre>
+      {% elif raw.github_recon.findings %}
+      <table>
+        <thead>
+          <tr>
+            <th>Query</th>
+            <th>Repository</th>
+            <th>File</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in raw.github_recon.findings %}
+          <tr>
+            <td>{{ item.query }}</td>
+            <td>{{ item.repo }}</td>
+            <td>{{ item.file }}</td>
+            <td><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Open</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <pre><code>{"message": "GitHub recon ran, no matches returned."}</code></pre>
+      {% endif %}
+      {% endif %}
+
+      {% if raw.vuln_check %}
+      <h3>NVD CVE Results</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 0.8rem;">CVE source: NVD API (keywordSearch queries from detected stack).</p>
+      {% if raw.vuln_check.cve_findings %}
+      <table>
+        <thead>
+          <tr>
+            <th>Component Query</th>
+            <th>CVE ID</th>
+            <th>CVSS</th>
+            <th>Severity</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for component in raw.vuln_check.cve_findings %}
+            {% for cve in component.cves %}
+            <tr>
+              <td>{{ component.component }}</td>
+              <td>{{ cve.id }}</td>
+              <td>{{ cve.score | default('N/A', true) }}</td>
+              <td>{{ cve.severity | default('N/A', true) }}</td>
+              <td>{{ cve.description | default('N/A', true) }}</td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <pre><code>{"message": "NVD queried, but no CVE matches were returned for current keywords."}</code></pre>
+      {% endif %}
+      {% endif %}
+
+      {% if raw.port_scanner and raw.port_scanner.services %}
+      <h3>Open Ports & Network Services</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Port/Proto</th>
+            <th>Service Name</th>
+            <th>Product & Version</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for svc in raw.port_scanner.services %}
+          <tr>
+            <td><strong style="color:var(--accent)">{{ svc.port }}</strong> / {{ svc.protocol }}</td>
+            <td>{{ svc.service | default('unknown', true) }}</td>
+            <td>{{ svc.product | default('N/A', true) }} {{ svc.version | default('', true) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      {% if raw.web_fingerprint %}
+      <h3>Web Technology Stack</h3>
+      <div class="tech-grid">
+        {% if raw.web_fingerprint.detected_technologies %}
+          {% for tech in raw.web_fingerprint.detected_technologies %}
+          <div class="tech-badge" title="Confidence: {{ tech.confidence | default(100) }}% | Method: {{ tech.detection_method | default('Analysis') }}">
+            <span class="tech-name">{{ tech.name }}</span>
+            <span class="tech-cat">{{ tech.category | default('Technology') }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="tech-badge"><span class="tech-name" style="margin:0;">No technologies detected</span></div>
+        {% endif %}
+      </div>
+      
+      {% if raw.web_fingerprint.server %}
+      <h3>Server Detail</h3>
+      <pre style="border-left: 4px solid var(--accent);"><code style="font-size: 1.1rem; color: #0f172a;">{{ raw.web_fingerprint.server }}</code></pre>
+      {% endif %}
+      {% endif %}
+
+      {% if raw.content_discovery %}
+      <h3>Discovered Hidden Paths</h3>
+      <pre><code>{{ raw.content_discovery | tojson(indent=2) }}</code></pre>
+      {% endif %}
+
+    </div>
+  </section>
+
+  <!-- Conclusion AI -->
+  {% if report.technical_summary %}
+  <section>
+    <h2>Deep Technical Summary</h2>
+    <div class="text-box glass-panel">
+      {{ report.technical_summary | replace('\n', '<br>') | safe }}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if report.attack_surface %}
+  <section>
+    <h2>Attack Surface Analysis</h2>
+    <div class="text-box glass-panel">
+      {{ report.attack_surface | replace('\n', '<br>') | safe }}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if report.risk_priority %}
+  <section>
+    <h2>Risk Priority</h2>
+    <div class="text-box glass-panel" style="border-left: 4px solid var(--critical)">
+      {{ report.risk_priority | replace('\n', '<br>') | safe }}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if report.conclusion %}
+  <section>
+    <h2>Conclusion</h2>
+    <div class="text-box glass-panel">
+      {{ report.conclusion | replace('\n', '<br>') | safe }}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>ReconX Intelligence Engine</span> | 
+    <span>Generated by: <strong>{% if report.generated_by == 'offline_fallback' %}Pattern-Based Fallback{% else %}AI (Qwen 2.5 14B){% endif %}</strong></span>
+  </footer>
+
+</div>
+
+<script>
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    
+    // Toggle functionality
+    const isOpen = body.classList.contains('open');
+    
+    if (!isOpen) {
+      body.classList.add('open');
+      icon.classList.add('open-icon');
+    } else {
+      body.classList.remove('open');
+      icon.classList.remove('open-icon');
+    }
+  }
+
+  // Auto-expand Critical and High vulnerabilities on load
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.badge-Critical, .badge-High').forEach(badge => {
+      const parent = badge.closest('.finding');
+      const body = parent.querySelector('.finding-body');
+      const icon = parent.querySelector('.toggle-icon');
+      if (!body.classList.contains('open')) {
+        body.classList.add('open');
+        icon.classList.add('open-icon');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
