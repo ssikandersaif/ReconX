@@ -191,7 +191,7 @@ Reports may contain sensitive target data. Keep them private.
 
 ## Demo
 
-![ReconX Report](docs/demo.png)
+![ReconX Report](recon-tool/docs/demo.png)
 
 ## Legal Disclaimer
 
